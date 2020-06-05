@@ -270,15 +270,34 @@ const useHooksExample = (arg: number): Record<any, Function> => {
     Pass!
 
     You can tie your effects to specific ways in which state has changed over time
-    by using refs
+    by using refs.
+    
+    This is a pretty reasonable use of refs.  
   */
   useEffect(() => {
     const prevState = stateRef.current;
     if (state - prevState > 5) {
-      console.log(`Life is exciting again!`);
+      console.log(`State has incremented another 5 points!`);
     }
     stateRef.current = state;
   }, [state]);
+  
+  /*
+    You wouldn't want to use another state variable to track the previous values
+    of application state because that value represents how you application was -
+    not how it is now.  Worse, every time you set prevState you would cause another render
+    and an infinite loop.
+    
+    The linter won't mind though.
+  */
+  const [prevState, setPrevState] = useState(state);
+  useEffect(() => {
+    if (state - prevState > 5) {
+      console.log(`State has incremented another 5 points!`);
+    }
+    setPrevState(state);
+  }, [prevState, state]);
+ 
 
   return {
     unMemoizedThree,
