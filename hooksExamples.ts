@@ -11,8 +11,7 @@ const useHooksExample = (arg: number): Record<any, Function> => {
   /*
     Pass!
 
-    this function doesn't rely on React state which could be stale.
-    (and it wouldn't matter if it did because it isn't memoized)
+    This function doesn't rely on React state.
   */
   const unMemoized = (): number => {
     return 10;
@@ -21,9 +20,12 @@ const useHooksExample = (arg: number): Record<any, Function> => {
   /*
     Pass!
 
-    While it relies on react state - the function is recreated
+    While it relies on react state , the function is recreated
     with the new values for state on every render - so those values
-    won't be stale
+    won't be stale when called.
+    
+    Nor is it a dependency of a function memoised with useCallback
+    (which would make memoization pointless), or an effect declared in useEffect.
   */
   const unMemoizedTwo = (): number => {
     return 10 + state;
@@ -189,6 +191,37 @@ const useHooksExample = (arg: number): Record<any, Function> => {
       `Change is happening - but I only care when it's state: ${state} - that changes`,
     );
   }, [state]);
+  
+    /*
+    Fail!
+
+    Like with callbacks,  an unmemoized function that is a dependency of an effect
+    (as it is in the hook below) breaks the rules of hooks.
+    
+    But is for a different reason that in the case with memoized functions.
+
+    The effect that has it as a dependency will run on every render - without
+    any corresponding change in application state.
+    
+    They are supposed to represent the relationship between
+    react state and the side effects in the application not controlled
+    by React directly. 
+  */
+  const unMemoizedFive = (): number => {
+    return 10;
+  };
+
+  /*
+    Pass!
+
+    Passes the linter - but the linter will direct you to fix unMemoizedFive;
+  */
+  useEffect(() => {
+    console.log(
+      `Nothing is really changing but I'm going to just keep logging 10 over and over anyway: ${unMemoizedFive()}
+       - I'm weird like that.  I just love the number 10!`,
+    );
+  }, [unMemoizedFive]);
 
   /*
     Fail!
